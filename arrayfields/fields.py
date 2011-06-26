@@ -1,16 +1,10 @@
 import json
 from abc import abstractproperty
 from django.db import models
-from django.utils.encoding import smart_unicode
 from django.utils.translation import ugettext_lazy as _
 
 
 class ArrayFieldBase(models.Field):
-    base_db_type = abstractproperty()
-
-    def db_type(self, connection):
-        return '%s[]' % self.base_db_type
-
     def get_prep_value(self, value):
         if value == '':
             value = '{}'
@@ -36,22 +30,28 @@ class CharArrayField(ArrayFieldBase):
     """
     A character varying array field for PostgreSQL
     """
-    description = _('Character array')
-    base_db_type = 'character varying'
+    description = _('Character varying array')
 
+    def db_type(self, connection):
+        if self.max_length is not None:
+            return 'character varying(%s)[]' % self.max_length
+        return 'character varying[]'
 
 class TextArrayField(ArrayFieldBase):
     """
     A text array field for PostgreSQL
     """
     description = _('Text array')
-    base_db_type = 'text'
 
+    def db_type(self, connection):
+        return 'text[]'
 
 class IntegerArrayField(ArrayFieldBase):
     """
     An integer array field for PostgreSQL
     """
     description = _('Integer array')
-    base_db_type = 'integer'
+
+    def db_type(self, connection):
+        return 'integer[]'
 
